@@ -9,10 +9,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^6.4.1",
+    "express": "^4.21.2",
     "nodemon": "^3.1.9",
     "prettier": "^3.5.2"
+  },
+  "devDependencies": {
+    "prisma": "^6.4.1"
   }
 }
