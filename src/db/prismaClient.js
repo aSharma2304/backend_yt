@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient().$extends({
   query: {
-    User: {
+    user: {
       async create({ args, query }) {
         if (args.data?.password) {
           args.data.password = await bcrypt.hash(args.data.password, 10);
@@ -28,7 +28,7 @@ const prisma = new PrismaClient().$extends({
     },
   },
   model: {
-    User: {
+    user: {
       // Custom Method to Sign JWT
       async generateJWT(user) {
         const token = jwt.sign(

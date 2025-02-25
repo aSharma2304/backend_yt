@@ -21,7 +21,7 @@ model User {
   avatar       String? // Cloudinary URL
   coverImage   String? // Cloudinary URL
   password     String
-  refreshToken String
+  refreshToken String   @default("update_later")
   watchHistory Videos[] @relation("WatchHistory")
   createdAt    DateTime @default(now())
 }
