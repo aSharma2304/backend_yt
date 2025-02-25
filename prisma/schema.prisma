@@ -14,7 +14,25 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id           Int      @id @default(autoincrement())
+  username     String
+  email        String   @unique
+  fullname     String
+  avatar       String? // Cloudinary URL
+  coverImage   String? // Cloudinary URL
+  password     String
+  refreshToken String
+  watchHistory Videos[] @relation("WatchHistory")
+  createdAt    DateTime @default(now())
+}
+
+model Videos {
+  id          Int    @id @default(autoincrement())
+  title       String
+  url         String // Video URL cloudinary
+  description String
+  thumbnail   String
+  duration    Int // we will get it from clodinary itself
+  views       Int    @default(0)
+  watchedBy   User[] @relation("WatchHistory")
 }
