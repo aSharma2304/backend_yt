@@ -27,19 +27,6 @@ const prisma = new PrismaClient().$extends({
       },
     },
   },
-  model: {
-    user: {
-      // Custom Method to Sign JWT
-      async generateJWT(user) {
-        const token = jwt.sign(
-          { userId: user.id, email: user.email, fullname: user.fullname },
-          process.env.ACCESS_TOKEN_SECRET, // Ensure this is set in your .env
-          { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
-        );
-        return token;
-      },
-    },
-  },
 });
 
 export default prisma;

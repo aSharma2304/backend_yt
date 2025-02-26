@@ -4,12 +4,22 @@ import { ApiError } from "../utils/apiError.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import prisma from "../db/prismaClient.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import {
+  comparePassword,
+  generateAcessToken,
+  generateRefreshToken,
+} from "../utils/jwtUtils.js";
 
 const registerSchema = z.object({
   fullname: z.string(),
   username: z.string().min(2, "Username must of length 2 or longer"),
   email: z.string().email("Not a valid email"),
   password: z.string().min(8, "Password must of of length 8 or longer"),
+});
+
+const loginSchema = z.object({
+  email: z.string().email("Not a valid email"),
+  password: z.string().min(8, "Password must be of length 8 or longer"),
 });
 
 const registerNewUser = asyncHandler(async (req, res) => {
@@ -89,4 +99,63 @@ const registerNewUser = asyncHandler(async (req, res) => {
   res.status(200).json(response);
 });
 
-export { registerNewUser };
+const loginUser = asyncHandler(async (req, res) => {
+  const userData = req.body;
+  const parsedData = loginSchema.safeParse(userData);
+  if (!parsedData.success) {
+    throw new ApiError(400, parsedData.error);
+  }
+  const userInDb = await prisma.user.findFirst({
+    where: {
+      email: userData.email,
+    },
+  });
+
+  if (!userInDb) {
+    throw new ApiError(400, "User dosen't exists with this email");
+  }
+
+  const isPasswordCorrect = await comparePassword(
+    userData.password,
+    userInDb.password
+  );
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Incorrect password");
+  }
+
+  const accessToken = await generateAcessToken(userInDb);
+  const refreshToken = await generateRefreshToken(userInDb);
+
+  userInDb.refreshToken = refreshToken;
+  const updatedUser = await prisma.user.update({
+    where: {
+      email: userInDb.email,
+    },
+    data: {
+      refreshToken,
+    },
+  });
+
+  if (!updatedUser) {
+    throw new ApiError(500, "An error occured while updating database");
+  }
+
+  const excludeFields = ["password", "refreshToken"];
+
+  const filteredUser = Object.fromEntries(
+    Object.entries(updatedUser).filter(([key]) => !excludeFields.includes(key))
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(200, filteredUser, "Logged In Successfully"));
+});
+
+export { registerNewUser, loginUser };
